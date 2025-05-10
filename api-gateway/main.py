@@ -13,7 +13,6 @@ app = FastAPI()
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
 
-
 async def verify_token(request: Request):
     auth_header = request.headers.get("authorization")
     if not auth_header or not auth_header.startswith("Bearer "):

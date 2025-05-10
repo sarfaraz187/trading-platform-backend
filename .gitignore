@@ -1,1 +1,4 @@
 .env
+
+# API Gateway Files
+firebase-service-account.json
