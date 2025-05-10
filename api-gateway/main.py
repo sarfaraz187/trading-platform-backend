@@ -26,11 +26,9 @@ async def verify_token(request: Request):
     except Exception:
         raise HTTPException(status_code=403, detail="Invalid Firebase ID token")
 
-
 @app.get("/health")
 def health():
     return {"api-gateway": "running"}
-
 
 @app.post("/user/register")
 async def proxy_register(request: Request):
