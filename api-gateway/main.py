@@ -22,11 +22,13 @@ async def verify_token(request: Request):
     try:
         decoded_token = auth.verify_id_token(id_token)
         return decoded_token
-    except Exception:
+    except Exception as e:
+        print("Token verification failed:", str(e))
         raise HTTPException(status_code=403, detail="Invalid Firebase ID token")
 
 @app.get("/health")
-def health():
+async def health(request: Request):
+    user_info = await verify_token(request)
     return {"api-gateway": "running"}
 
 @app.post("/user/register")

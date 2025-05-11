@@ -2,3 +2,5 @@
 
 # API Gateway Files
 firebase-service-account.json
+__pycache__
+

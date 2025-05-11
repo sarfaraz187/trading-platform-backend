@@ -16,6 +16,8 @@ services:
       - "8001:8000"
     environment:
       - USER_SERVICE_URL=http://user-service:8000
+    volumes:
+      - ./api-gateway:/app 
     depends_on:
       - user-service
 
