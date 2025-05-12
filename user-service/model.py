@@ -11,6 +11,8 @@ from config.database import Base
 # | `email`        | string     | ✅        | Used for notifications & Firebase login                    |
 # | `full_name`    | string     | ✅        | Name for display                                           |
 # | `created_at`   | datetime   | ✅        | Signup timestamp                                           |
+# | `updated_at`   | datetime   | ✅        | Signup timestamp                                           |
+# | `last_logged_in`   | datetime   | ✅        | Signup timestamp                                           |
 # | `role`         | string     | ✅        | `user`, `admin`, `trader` etc. (default: `user`)           |
 # | `is_active`    | boolean    | ✅        | Account status                                             |
 # | `balance`      | float      | optional | For demo account trading (if applicable)                   |
@@ -27,7 +29,8 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     full_name = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    last_updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    last_logged_in_at = Column(DateTime(timezone=True), nullable=True)
     role = Column(String, default="user", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     balance = Column(Float, nullable=True)

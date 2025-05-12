@@ -17,7 +17,7 @@ services:
     environment:
       - USER_SERVICE_URL=http://user-service:8000
     volumes:
-      - ./api-gateway:/app 
+      - ./api-gateway:/app
     depends_on:
       - user-service
 
@@ -28,6 +28,8 @@ services:
       - "8002:8000"
     environment:
       - DATABASE_URL=postgresql://user:password@user-db:5432/users
+    volumes:
+      - ./user-service:/app
     depends_on:
       - user-db
 

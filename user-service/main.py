@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 
 from config.database import engine, get_db, Base
-from models import User
-from schemas import UserCreate, UserResponse, UserUpdate, KycStatus, Role
+from model import User
+from schema import UserCreate, UserResponse, UserUpdate, KycStatus, Role
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
@@ -181,5 +181,6 @@ def update_kyc_status(
     db.refresh(db_user)
     return db_user
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+# Optional: Run the app with uvicorn
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
