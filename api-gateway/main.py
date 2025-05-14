@@ -1,42 +1,41 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Depends, APIRouter
 import httpx
 import os
-import firebase_admin
-from firebase_admin import credentials, auth
-
-# Initialize Firebase Admin SDK
-cred = credentials.Certificate("firebase-service-account.json")
-firebase_admin.initialize_app(cred)
+from auth.firebase_auth import verify_token
 
 app = FastAPI()
 
+router = APIRouter(prefix="/users", tags=["users"])
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
 
-async def verify_token(request: Request):
-    auth_header = request.headers.get("authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid auth header")
+# Proxy all user-related requests to the user service
+@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def proxy_user_requests(path: str, request: Request, user=Depends(verify_token)):
+    async with httpx.AsyncClient() as client:
+        req_method = getattr(client, request.method.lower())
+        url = f"{USER_SERVICE_URL}/{path}"
 
-    id_token = auth_header.split(" ")[1]
-    try:
-        decoded_token = auth.verify_id_token(id_token)
-        return decoded_token
-    except Exception as e:
-        print("Token verification failed:", str(e))
-        raise HTTPException(status_code=403, detail="Invalid Firebase ID token")
+        body = await request.body()
+        headers = dict(request.headers)
+        
+        # Inject Firebase UID or email into downstream request
+        headers["X-User-Id"] = user["uid"]
+        headers["X-User-Email"] = user.get("email", "")
 
+        response = await req_method(url, content=body, headers=headers)
+        return response.json()
+    
 @app.get("/health")
 async def health(request: Request):
     user_info = await verify_token(request)
     return {"api-gateway": "running"}
 
-@app.post("/user/register")
-async def proxy_register(request: Request):
-    user_info = await verify_token(request)
-    payload = await request.json()
+# @app.post("/user/register")
+# async def proxy_register(request: Request):
+#     user_info = await verify_token(request)
+#     payload = await request.json()
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(f"{USER_SERVICE_URL}/user/register", json=payload)
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(f"{USER_SERVICE_URL}/user/register", json=payload)
 
-    return JSONResponse(status_code=response.status_code, content=response.json())
+#     return JSONResponse(status_code=response.status_code, content=response.json())
