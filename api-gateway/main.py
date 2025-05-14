@@ -1,16 +1,20 @@
 from fastapi import FastAPI, Request, Depends, APIRouter
 import httpx
 import os
-from auth.firebase_auth import verify_token
+from lib.firebase_auth import verify_token
 
 app = FastAPI()
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/api/v1/users", tags=["users"])
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
 
 # Proxy all user-related requests to the user service
 @router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_user_requests(path: str, request: Request, user=Depends(verify_token)):
+
+    print(f"Proxying request to user service: {request.method} {USER_SERVICE_URL}/{path}")
+    print(f"User info: {user}")
+    print(f"Request headers: {request.headers}")
     async with httpx.AsyncClient() as client:
         req_method = getattr(client, request.method.lower())
         url = f"{USER_SERVICE_URL}/{path}"
