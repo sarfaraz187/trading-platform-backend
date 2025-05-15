@@ -1,12 +1,11 @@
-import uvicorn
 import uuid
 from fastapi import FastAPI, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional
 
 from config.database import engine, get_db, Base
 from model import User
-from schema import UserCreate, UserResponse, UserUpdate, KycStatus, Role
+from schema import UserCreate, UserResponse, UserUpdate, KycStatus
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
@@ -30,7 +29,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         )
     
     # Create user object
-    db_user = User(**user.dict())
+    db_user = User(**user.model_dump())
     
     # Save to database
     db.add(db_user)
@@ -43,6 +42,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 @app.get("/users/{user_id}", response_model=UserResponse)
 def get_user(user_id: str, db: Session = Depends(get_db)):
     try:
+        print(f"Fetching user with ID: {user_id}")
         uuid_obj = uuid.UUID(user_id)
         db_user = db.query(User).filter(User.id == uuid_obj).first()
     except ValueError:
@@ -108,6 +108,7 @@ def get_users(
     country: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
+    print(f"Inside get_users definition")
     query = db.query(User)
     
     # Apply filters if provided
