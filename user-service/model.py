@@ -3,11 +3,24 @@ from sqlalchemy.sql import func
 import uuid
 from config.database import Base
 
-# Don't have multiple UUID's keep it simple and stick with one which will be used across the entire application and all the services.
-# | Field          | Type       | Required | Notes                                                      |
-# | -------------- | ---------- | -------- | ---------------------------------------------------------- |
-# | `id`           | UUID / int | ✅        | Internal unique user ID                                    |
-# | -------------- | ---------- | -------- | ---------------------------------------------------------- |
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    firebase_uid = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    last_logged_in_at = Column(DateTime(timezone=True), nullable=True)
+    role = Column(String, default="user", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    balance = Column(Float, nullable=True)
+    kyc_status = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
+    preferred_currency = Column(String, nullable=True)
+
 
 # User Service database schema for MVP trading platform
 # | Field          | Type       | Required | Notes                                                       |
@@ -26,21 +39,3 @@ from config.database import Base
 # | `phone number` | string     | optional | Can be useful for legal/compliance reasons                  |
 # | `preferred_currency` | string     | optional | Can be useful for legal/compliance reasons            |
 # | -------------- | ---------- | -------- | ----------------------------------------------------------  |
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    # firebase_uid = Column(String, unique=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    full_name = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    last_logged_in_at = Column(DateTime(timezone=True), nullable=True)
-    role = Column(String, default="user", nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
-    balance = Column(Float, nullable=True)
-    kyc_status = Column(String, nullable=True)
-    country = Column(String, nullable=True)
-    phone_number = Column(String, nullable=True)
-    preferred_currency = Column(String, nullable=True)

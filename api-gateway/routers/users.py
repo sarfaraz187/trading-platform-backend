@@ -13,37 +13,33 @@ USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
 async def proxy_user_requests(path: str, request: Request, user=Depends(verify_token)):
     url = f"{USER_SERVICE_URL}/{path}".rstrip("/")
     
-    headers = {}
-    for key, value in request.headers.items():
-        if key.lower() != "content-length":
-            headers[key] = value
-    
-    # Add user authentication headers
+    headers = {key: value for key, value in request.headers.items() if key.lower() != "content-length"}
     headers["X-User-Id"] = user["uid"]
     headers["X-User-Email"] = user.get("email", "")
-    
+
     try:
         async with httpx.AsyncClient() as client:
-            if request.method.upper() in ["POST", "PUT", "PATCH", "DELETE"]:
-                # For requests with body
+            method = request.method.upper()
+
+            if method in ["POST", "PUT", "PATCH"]:
                 body = await request.body()
-                print(f"body: {body}")
-                response = await getattr(client, request.method.lower())(
-                    url, 
+                response = await getattr(client, method.lower())(
+                    url,
                     content=body,
                     headers=headers
                 )
+            elif method == "DELETE":
+                # DELETE usually doesn't have a body — skip 'content'
+                response = await client.delete(url, headers=headers)
             else:
-                # For GET requests and similar
                 params = dict(request.query_params)
                 response = await client.get(url, headers=headers, params=params)
-            
-            # print(f"response: {response.status_code} {response.text}")
-            # Return the full response
+
             return Response(
                 content=response.content,
                 status_code=response.status_code,
                 headers=dict(response.headers)
             )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error proxying request: {str(e)}")

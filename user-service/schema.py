@@ -41,7 +41,7 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: UUID4
     created_at: datetime
-    last_updated_at: datetime
+    updated_at: datetime
     
     class Config:
         from_attributes = True
