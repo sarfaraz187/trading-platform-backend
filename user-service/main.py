@@ -1,5 +1,5 @@
 import uuid
-from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi import FastAPI, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -12,9 +12,39 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Create a new user
-@app.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+# Get all users.
+@app.get("/", response_model=list[UserResponse])
+def get_users(
+    skip: int = 0, 
+    limit: int = 100,
+    role: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    kyc_status: Optional[str] = None,
+    country: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    print(f"------ Inside GET Users ------")
+    query = db.query(User)
+    
+    # Apply filters if provided.
+    if role:
+        query = query.filter(User.role == role)
+    if is_active is not None:
+        query = query.filter(User.is_active == is_active)
+    if kyc_status:
+        query = query.filter(User.kyc_status == kyc_status)
+    if country:
+        query = query.filter(User.country == country)
+        
+    users = query.offset(skip).limit(limit).all()
+    return users
+
+# Create a new user.
+@app.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
+
+    print(f"------ Inside POST Users ------")
+    
     # Check if user already exists by email or firebase_uid
     if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(
@@ -22,13 +52,13 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
-    if db.query(User).filter(User.firebase_uid == user.firebase_uid).first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this Firebase ID already exists"
-        )
+    # if db.query(User).filter(User.firebase_uid == user.firebase_uid).first():
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="User with this Firebase ID already exists"
+    #     )
     
-    # Create user object
+    # Create user object.
     db_user = User(**user.model_dump())
     
     # Save to database
@@ -59,15 +89,15 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     return db_user
 
 # Get user by Firebase UID
-@app.get("/users/firebase/{firebase_uid}", response_model=UserResponse)
-def get_user_by_firebase(firebase_uid: str, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
-    if db_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    return db_user
+# @app.get("/users/firebase/{firebase_uid}", response_model=UserResponse)
+# def get_user_by_firebase(firebase_uid: str, db: Session = Depends(get_db)):
+#     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+#     if db_user is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="User not found"
+#         )
+#     return db_user
 
 # Update user
 @app.patch("/users/{user_id}", response_model=UserResponse)
@@ -96,33 +126,6 @@ def update_user(user_id: str, user_update: UserUpdate, db: Session = Depends(get
     db.commit()
     db.refresh(db_user)
     return db_user
-
-# Get all users
-@app.get("/users/", response_model=list[UserResponse])
-def get_users(
-    skip: int = 0, 
-    limit: int = 100, 
-    role: Optional[str] = None,
-    is_active: Optional[bool] = None,
-    kyc_status: Optional[str] = None,
-    country: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    print(f"Inside get_users definition")
-    query = db.query(User)
-    
-    # Apply filters if provided
-    if role:
-        query = query.filter(User.role == role)
-    if is_active is not None:
-        query = query.filter(User.is_active == is_active)
-    if kyc_status:
-        query = query.filter(User.kyc_status == kyc_status)
-    if country:
-        query = query.filter(User.country == country)
-        
-    users = query.offset(skip).limit(limit).all()
-    return users
 
 # Update user balance
 @app.patch("/users/{user_id}/balance", response_model=UserResponse)
