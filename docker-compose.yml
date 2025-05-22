@@ -2,6 +2,7 @@ services:
   nginx:
     build: ./nginx
     container_name: nginx
+    image: nginx:latest
     ports:
       - "8080:80"
     networks:
