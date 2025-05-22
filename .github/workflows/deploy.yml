@@ -22,21 +22,33 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build & Push Auth Microservice
-      - name: Build & Push auth image
+      # Build & Push NGINX reverse proxy
+      # This image will be used to route traffic to the appropriate microservice
+      - name: Build & Push nginx image
         uses: docker/build-push-action@v5
         with:
-          context: ./auth
+          context: ./nginx
           push: true
-          tags: spacemarsx/auth:latest
+          tags: spacemarsx/nginx:latest
+
+      # Build & Push API-Gateway Microservice
+      # This image will be used to route traffic to the appropriate microservice
+      # and handle authentication
+      - name: Build & Push API-Gateway image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api-gateway
+          push: true
+          tags: spacemarsx/api-gateway:latest
 
       # Build & Push User Microservice
+      # This image will be used to handle user-related operations
       - name: Build & Push user image
         uses: docker/build-push-action@v5
         with:
-          context: ./user
+          context: ./user-service
           push: true
-          tags: spacemarsx/user:latest
+          tags: spacemarsx/user-service:latest
 
       # SSH into EC2 and deploy using pulled images
       - name: Deploy to EC2 via SSH
