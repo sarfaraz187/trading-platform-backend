@@ -1,4 +1,4 @@
-name: CI/CD DockerHub to EC2
+name: Deploy to EC2
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: development
 
     steps:
       - name: Checkout code
