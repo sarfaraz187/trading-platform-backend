@@ -34,7 +34,7 @@ jobs:
       # Build & Push API-Gateway Microservice
       # This image will be used to route traffic to the appropriate microservice
       # and handle authentication
-      - name: Build & Push API-Gateway image
+      - name: Build & Push api gateway image
         uses: docker/build-push-action@v5
         with:
           context: ./api-gateway
@@ -58,7 +58,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/your-repo
+            cd /home/ubuntu/trading-platform
             git pull origin main
-            docker-compose pull  # pulls latest images from DockerHub
+            docker-compose pull
             docker-compose up -d --remove-orphans
