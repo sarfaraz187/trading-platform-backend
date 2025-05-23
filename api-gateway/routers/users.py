@@ -9,6 +9,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 # Define the USER_SERVICE_URL environment variable
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
 
+@router.api_route("", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 @router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 async def proxy_user_requests(path: str, request: Request, user=Depends(verify_token)):
     url = f"{USER_SERVICE_URL}/{path}".rstrip("/")

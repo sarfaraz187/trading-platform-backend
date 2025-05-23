@@ -10,10 +10,11 @@ from schema import UserCreate, UserResponse, UserUpdate, KycStatus
 # Create the database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=True)
 
 # Get all users.
 @app.get("/", response_model=list[UserResponse])
+@app.get("", response_model=list[UserResponse])
 def get_users(
     skip: int = 0, 
     limit: int = 100,
