@@ -1,5 +1,4 @@
-import uuid
-from fastapi import FastAPI, Depends, HTTPException, status, Query, Request
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -10,11 +9,22 @@ from schema import UserCreate, UserResponse, UserUpdate, KycStatus
 # Create the database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(redirect_slashes=True)
+app = FastAPI(
+    title="User Service",
+    description="Handles user account creation, retrieval, and updates.",
+    version="1.0.0",
+    openapi_tags=[
+        {
+            "name": "Users",
+            "description": "Operations related to user accounts"
+        }
+    ],
+    redirect_slashes=True
+)
 
 # Get all users.
-@app.get("/", response_model=list[UserResponse])
-@app.get("", response_model=list[UserResponse])
+@app.get("/", response_model=list[UserResponse], tags=["Users"])
+@app.get("", response_model=list[UserResponse], tags=["Users"])
 def get_users(
     skip: int = 0, 
     limit: int = 100,
@@ -41,7 +51,7 @@ def get_users(
     return users
 
 # Create a new user.
-@app.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
     print(f"------ Inside POST Users ------")
@@ -70,7 +80,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 # Get user by firebase UID
-@app.get("/{user_id}", response_model=UserResponse)
+@app.get("/{user_id}", response_model=UserResponse, tags=["Users"])
 def get_user(user_id: str, db: Session = Depends(get_db)):
 
     print("------ Inside GET User ------")
@@ -94,7 +104,7 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     return db_user
 
 # Update user
-@app.patch("/{user_id}", response_model=UserResponse)
+@app.patch("/{user_id}", response_model=UserResponse, tags=["Users"])
 def update_user(user_id: str, user_update: UserUpdate, db: Session = Depends(get_db)):
     try:
         print("User ID : {user_id}")
@@ -123,7 +133,7 @@ def update_user(user_id: str, user_update: UserUpdate, db: Session = Depends(get
     return db_user
 
 # Delete a user from database
-@app.delete("/{user_id}", response_model=UserResponse)
+@app.delete("/{user_id}", response_model=UserResponse, tags=["Users"])
 def delete_user(user_id: str, db: Session = Depends(get_db)):
     try:
         db_user = db.query(User).filter(User.firebase_uid == user_id).first()
@@ -138,7 +148,7 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
     return db_user
         
 # Update user balance
-@app.patch("/{user_id}/balance", response_model=UserResponse)
+@app.patch("/{user_id}/balance", response_model=UserResponse, tags=["Users"])
 def update_balance(
     user_id: str, 
     balance_update: float, 
@@ -166,7 +176,7 @@ def update_balance(
     return db_user
 
 # Update user KYC status
-@app.patch("/{user_id}/kyc", response_model=UserResponse)
+@app.patch("/{user_id}/kyc", response_model=UserResponse, tags=["Users"])
 def update_kyc_status(
     user_id: str, 
     kyc_status: KycStatus, 
