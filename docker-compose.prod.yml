@@ -16,7 +16,7 @@ services:
     build:
       context: ./api-gateway
       args:
-        NODE_ENV: production
+        ENV: production
     image: api-gateway-service-prod:latest
     container_name: api-gateway
     ports:
